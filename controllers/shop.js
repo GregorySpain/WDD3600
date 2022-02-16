@@ -70,9 +70,9 @@ exports.postCart = (req, res, next) => {
 }
 
 exports.postCartDeleteProduct = (req, res, next) => {
-    const prodID = req.body.productID;
-    Product.findById(prodID, product => {
-        Cart.deleteProduct(prodID, product.price);
+    const prodId = req.body.productId;
+    Product.findById(prodId, product => {
+        Cart.deleteProduct(prodId, product.price);
         res.redirect('/cart');
     });
 }
