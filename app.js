@@ -1,5 +1,6 @@
 const path = require('path'); // import the path module
 const get404 = require('./controllers/error') // import the error controller
+const db = require('./util/database');
 
 const express = require('express'); // import express
 const bodyParser = require('body-parser'); // import body-parser
