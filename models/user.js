@@ -1,23 +1,124 @@
-const Sequelize = require('sequelize'); // import a Sequelizze object
+const { get } = require('express/lib/response');
+const mongodb = require('mongodb');
+const getDb = require('../util/database').getDb;
 
-const sequelize = require('../util/database'); // link to the database file
-
-// define the model, setting the schema for each column.
-const User = sequelize.define('user', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
-        primaryKey: true,
-    },
-    name: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    email: {
-        type: Sequelize.STRING,
-        allowNull: false
+const ObjectId = mongodb.ObjectId;
+class User {
+    constructor(username, email, cart, id) {
+        this.name = username;
+        this.email = email;
+        this.cart = cart; // {items: []}
+        this._id = id;
     }
-});
+
+    // method to save a user
+    save() {
+        const db = getDb();
+        return db.collection('users').insertOne(this);
+    }
+
+    // method to add an item to the cart
+    addToCart(product) {
+        const cartProductIndex = this.cart.items.findIndex(cp => { // look for an existing product in the cart
+            return cp.productId.toString() === product._id.toString(); // returns true when true
+        });
+        let newQuantity = 1;
+        const updatedCartItems = [...this.cart.items]; // create a new array with spread operator
+        if (cartProductIndex >= 0) { // if the product already exists
+            // get the existing quantity and add 1
+            newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+            // set the existing quantity field to the new quantity
+            updatedCartItems[cartProductIndex].quantity = newQuantity;
+
+        } else { // if the product isn't already in the cart push it to the array
+            updatedCartItems.push({ 
+                productId: new ObjectId(product._id), 
+                quantity: newQuantity});
+        }
+
+        // create a new object to store the cart then update the cart with the new cart
+        const updatedCart = {items: updatedCartItems };
+        const db = getDb();
+        return db.collection('users')
+            .updateOne({_id: new ObjectId(this._id)},
+            {$set: {cart: updatedCart}}
+        );
+    }
+
+    
+    getCart() {
+        const db = getDb();
+        const productIds = this.cart.items.map(i => {
+            return i.productId;
+        })
+        return db.collection('products')
+        .find({_id: {$in: productIds}})
+        .toArray()
+        .then(products => {
+            return products.map(p => {
+                return {...p, quantity: this.cart.items.find(i => {
+                    return i.productId.toString() === p._id.toString();
+                }).quantity
+            };
+            })
+        });
+    }
+
+    deleteItemFromCart(productId) {
+        const updatedCartItems = this.cart.items.filter(item => {
+            return item.productId.toString() !== productId.toString();
+        });
+        const db = getDb();
+        return db.collection('users')
+            .updateOne({_id: new ObjectId(this._id)},
+            {$set: {cart: {items: updatedCartItems}}}
+        );
+    }
+
+    addOrder() {
+        const db = getDb();
+        return this.getCart()
+        .then(products => {
+            const order = {
+                items: products,
+                user: {
+                    _id: new ObjectId(this._id),
+                    name: this.name
+                }
+            }
+            return db
+            .collection('orders')
+            .insertOne(order);
+        })
+        .then(result => {
+            this.cart = {items: []};
+            return db.collection('users')
+            .updateOne({_id: new ObjectId(this._id)},
+            {$set: {cart: {items: [] } } }
+        );
+        });
+    }
+
+    getOrders() {
+        const db = getDb();
+        return db
+        .collection('orders')
+        .find({'user._id': new ObjectId(this._id) })
+        .toArray();
+    }
+    
+    static findById(userId) {
+        const db = getDb();
+        return db.collection('users')
+        .findOne({_id: new ObjectId(userId)})
+        .then(user => {
+            console.log(user);
+            return user;
+        })
+        .catch(err => {
+            console.log(err);
+        });
+    }
+}
 
 module.exports = User;

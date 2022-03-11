@@ -1,13 +1,7 @@
 const path = require('path'); // import the path module
 const get404 = require('./controllers/error') // import the error controller
-const sequelize = require('./util/database');
-const Product = require('./models/product');
+const mongoConnect = require('./util/database').mongoConnect;
 const User = require('./models/user');
-const Cart = require('./models/cart');
-const CartItem = require('./models/cart-item');
-const Order = require('./models/order');
-const OrderItem = require('./models/order-item');
-
 
 const express = require('express'); // import express
 const bodyParser = require('body-parser'); // import body-parser
@@ -26,14 +20,15 @@ app.use(bodyParser.urlencoded({extended: false})); //
 // but in a way that allows cross platform use
 app.use(express.static(path.join(__dirname, 'public')));
 
+// create a user and attach it to the request as req.user
 app.use((req, res, next) => {
-    User.findByPk(1)
-    .then(user => {
-        req.user = user;
-        next();
+    User.findById('6226c16d90f07622346f778c') // pass the user id to the findById function
+    .then(user => { // then attach the data from the returned user to a new user object
+        req.user = new User(user.name, user.email, user.cart, user._id); // attach the user to the req
+        next(); // call next so it is applied to all routes
     })
     .catch(err => console.log(err));
-})
+});
 
 app.use('/admin', adminRoutes); // for any requests to the admin folder use the admin route file
 
@@ -43,43 +38,10 @@ app.use(shopRoutes); // for any requests to the shop folder, use the shop route.
 // this calls the get404 function in the error controller.
 app.use(get404.get404);
 
-// set table associations
-// add the userId to the products table in a one to many relationship
-Product.belongsTo(User, {constraints: true, onDelete: 'CASCADE'});
-User.hasMany(Product);
-// add the userId to the Cart table in a one to one relationship
-User.hasOne(Cart);
-Cart.belongsTo(User);
-// create many to many relationship between cart and
-// product tables through the cart item table.
-Cart.belongsToMany(Product, { through: CartItem });
-Product.belongsToMany(Cart, { through: CartItem });
-// create a one to many relation ship between user and orders.
-Order.belongsTo(User);
-User.hasMany(Order);
-// create a many to many relationship between the orders and
-// products tables through the orderItems table.
-Order.belongsToMany(Product, { through: OrderItem });
 
-
-
-sequelize
-.sync()
-//.sync({force: true})
-.then(result => {
-    return User.findByPk(1);
-}).then(user => {
-    if (!user) {
-        return User.create({ name: 'Greg', email: 'Test@test.com'})
-    }
-    return user
-}).then(user => {
-    return user.createCart();
-    //console.log(user)
-}
-).then(cart => {
+mongoConnect(() => { // call the mongoConnect method to start database connection
     app.listen(3000);     // start listening on the port passed.
+})
 
-})    
-.catch(err => console.log(err));
+
 

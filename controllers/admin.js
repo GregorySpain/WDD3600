@@ -1,4 +1,5 @@
 
+
 // export the function that will render the add product view.
 // called by admin.js
 // import the model
@@ -12,24 +13,21 @@ exports.getAddProduct = (req, res, next) => {
     });
 }
 
-// export the function that will execute on a post request.
-// the create method is Sequelize and creates a product and
-// automatically saves it to the database.
+// function to add product, called by post route from admin routes file
 exports.postAddProduct = (req, res, next) => {
+    // get data from the request body and create a new product object with it.
     const title = req.body.title;
     const imageUrl = req.body.imageUrl;
     const price = req.body.price;
     const description = req.body.description;
 
-    req.user.createProduct({
-        title: title,
-        price: price,
-        imageUrl: imageUrl,
-        description: description,
-    })
-    .then(result => {
-        //console.log(result);
-        console.log('Created Product');
+    const product = new Product(title, price, description, imageUrl, null, req.user._id);
+    
+    // call the save method of the product object
+    product
+    .save()
+    .then(result => { // then redirect to the products page
+        console.log('Created Product'); // log confirmation message
         res.redirect('/admin/products');
     })
     .catch(err => console.log(err));
@@ -37,22 +35,20 @@ exports.postAddProduct = (req, res, next) => {
 }
 
 exports.getEditProduct = (req, res, next) => {
-    const editMode = req.query.edit;
-    if (!editMode) {
+    const editMode = req.query.edit; // edit is a boolean stored as a query string on the url
+    if (!editMode) { // if false simply redirect to the home page
        return res.redirect('/');
     }
-    const prodId = req.params.productId
-    req.user.getProducts({ where: {id: prodId}})
-    //Product.findByPk(prodId)
-    .then(products => {
-        const product = products[0];
-        if (!product) {
+    const prodId = req.params.productId // get the product id from the url
+    Product.findById(prodId) // returns product as a promise
+    .then(product => {
+        if (!product) { // if no product is returned redirect to the homepage
             return res.redirect('/')
         }
-        res.render('admin/edit-product', {
+        res.render('admin/edit-product', { // else render the page
             pageTitle: 'Edit Product',
             path: '/admin/edit-product',
-            editing: editMode,
+            editing: editMode, // used in if statements in view
             product: product
         });
 
@@ -60,19 +56,17 @@ exports.getEditProduct = (req, res, next) => {
 }
 
 exports.postEditProduct = (req, res, next) => {
+    // get data from request body and use it to create a new
+    // product object
     const prodId = req.body.productId;
     const updatedTitle = req.body.title;
     const updatedImageUrl = req.body.imageUrl;
     const updatedPrice = req.body.price;
     const updatedDescription = req.body.description;
-    Product.findByPk(prodId)
-    .then(product => {
-        product.title = updatedTitle;
-        product.price = updatedPrice;
-        product.imageUrl = updatedImageUrl;
-        product.description = updatedDescription;
-        return product.save();
-    })
+    const product = new Product(updatedTitle, updatedPrice, updatedDescription, updatedImageUrl, prodId);
+    
+    // save the new data then redirect to the admin/products page
+    product.save()
     .then(result => {
         console.log('Updated Product')
         res.redirect('/admin/products');
@@ -80,10 +74,10 @@ exports.postEditProduct = (req, res, next) => {
     .catch(err => console.log(err))
 }
 
+// method to get all products from admin routes
 exports.getProducts = (req, res, next) => {
-    req.user.getProducts()
-        //Product.findAll()
-        .then(products => {
+    Product.fetchAll() // get all products
+        .then(products => { // then render the page passing the products
         res.render('admin/products', { pageTitle: 'Admin Products',
         prods: products,
         path: '/admin/products' });
@@ -91,13 +85,11 @@ exports.getProducts = (req, res, next) => {
     .catch(err => console.log(err));
 }
 
+// method to delete a product from admin routes
 exports.postDeleteProduct = (req, res, next) => {
-    const prodId = req.body.productId;
-    Product.findByPk(prodId)
-    .then(product => {
-        return product.destroy()
-    })
-    .then(result => {
+    const prodId = req.body.productId; // get product id from request body
+    Product.deleteById(prodId) // call delete method of product object
+    .then(() => { // then redirect
         console.log('DESTROYED PRODUCT')
         res.redirect('/admin/products')
     })
