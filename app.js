@@ -1,10 +1,10 @@
 const path = require('path'); // import the path module
 const get404 = require('./controllers/error') // import the error controller
-const mongoConnect = require('./util/database').mongoConnect;
 const User = require('./models/user');
 
 const express = require('express'); // import express
 const bodyParser = require('body-parser'); // import body-parser
+const mongoose = require('mongoose'); // import mongoose
 
 const app = express(); // this  returns an express object
 
@@ -22,9 +22,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // create a user and attach it to the request as req.user
 app.use((req, res, next) => {
-    User.findById('6226c16d90f07622346f778c') // pass the user id to the findById function
+    User.findById('624ba3dc6818fe55c78ae9cd') // pass the user id to the findById function
     .then(user => { // then attach the data from the returned user to a new user object
-        req.user = new User(user.name, user.email, user.cart, user._id); // attach the user to the req
+        req.user = user; // attach the user to the req
         next(); // call next so it is applied to all routes
     })
     .catch(err => console.log(err));
@@ -39,8 +39,23 @@ app.use(shopRoutes); // for any requests to the shop folder, use the shop route.
 app.use(get404.get404);
 
 
-mongoConnect(() => { // call the mongoConnect method to start database connection
-    app.listen(3000);     // start listening on the port passed.
+mongoose.connect('mongodb+srv://root:MyoyQ4MsFrV8rt1u@cluster0.ad8ew.mongodb.net/shop?retryWrites=true&w=majority')
+.then(result => {
+    User.findOne().then(user => {
+        if (!user) {
+            const user = new User({
+                name: 'Greg',
+                email: 'test@test.com',
+                cart: {
+                    items: []
+                }
+            });
+            user.save();
+        }
+    })
+    app.listen(3000);
+}).catch(err => {
+    console.log(err);
 })
 
 

@@ -21,7 +21,13 @@ exports.postAddProduct = (req, res, next) => {
     const price = req.body.price;
     const description = req.body.description;
 
-    const product = new Product(title, price, description, imageUrl, null, req.user._id);
+    const product = new Product({
+        title: title,
+        price: price,
+        description: description,
+        imageUrl: imageUrl,
+        userId: req.user
+    });
     
     // call the save method of the product object
     product
@@ -63,10 +69,16 @@ exports.postEditProduct = (req, res, next) => {
     const updatedImageUrl = req.body.imageUrl;
     const updatedPrice = req.body.price;
     const updatedDescription = req.body.description;
-    const product = new Product(updatedTitle, updatedPrice, updatedDescription, updatedImageUrl, prodId);
     
+    Product.findById(prodId)
+    .then(product => {
+        product.title = updatedTitle;
+        product.price = updatedPrice;
+        product.description = updatedDescription;
+        product.imageUrl = updatedImageUrl;
+        return product.save();
+    })    
     // save the new data then redirect to the admin/products page
-    product.save()
     .then(result => {
         console.log('Updated Product')
         res.redirect('/admin/products');
@@ -76,8 +88,8 @@ exports.postEditProduct = (req, res, next) => {
 
 // method to get all products from admin routes
 exports.getProducts = (req, res, next) => {
-    Product.fetchAll() // get all products
-        .then(products => { // then render the page passing the products
+    Product.find() // get all products
+    .then(products => { // then render the page passing the products
         res.render('admin/products', { pageTitle: 'Admin Products',
         prods: products,
         path: '/admin/products' });
@@ -88,7 +100,7 @@ exports.getProducts = (req, res, next) => {
 // method to delete a product from admin routes
 exports.postDeleteProduct = (req, res, next) => {
     const prodId = req.body.productId; // get product id from request body
-    Product.deleteById(prodId) // call delete method of product object
+    Product.findByIdAndRemove(prodId) // call delete method of product object
     .then(() => { // then redirect
         console.log('DESTROYED PRODUCT')
         res.redirect('/admin/products')
