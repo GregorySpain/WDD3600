@@ -78,18 +78,7 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ email: email })
     .then(user => {
       if (!user) {
-        req.flash('error', 'Invalid email or password.');
-        return res.redirect('/login');
-      }
-      bcrypt
-        .compare(password, user.password)
-        .then(doMatch => {
-          if (doMatch) {
-            req.session.isLoggedIn = true;
-            req.session.user = user;
-            return req.session.save(err => {
-              console.log(err);
-              return res.status(422)
+        return res.status(422)
               .render('auth/login', {
                 path: '/login',
                 pageTitle: 'Login',
@@ -100,6 +89,16 @@ exports.postLogin = (req, res, next) => {
                 },
                 validationErrors: []
               });
+      }
+      bcrypt
+        .compare(password, user.password)
+        .then(doMatch => {
+          if (doMatch) {
+            req.session.isLoggedIn = true;
+            req.session.user = user;
+            return req.session.save(err => {
+              console.log(err);
+              res.redirect('/');
             });
           }
           return res.status(422)
@@ -119,7 +118,11 @@ exports.postLogin = (req, res, next) => {
           res.redirect('/login');
         });
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postSignup = (req, res, next) => {
@@ -162,7 +165,9 @@ exports.postSignup = (req, res, next) => {
           });
         })
         .catch(err => {
-          console.log(err);
+          const error = new Error(err);
+          error.httpStatusCode = 500;
+          return next(error);
         }); 
 };
 
@@ -217,7 +222,9 @@ exports.postReset = (req, res, next) => {
     });
   })
     .catch(err => {
-      console.log(err);
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
   });
 }
@@ -242,7 +249,9 @@ exports.getNewPassword = (req, res, next) => {
     });
   })
   .catch(err => {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   });
 }
 
@@ -270,6 +279,8 @@ exports.postNewPassword = (req, res, next) => {
     res.redirect('/login');
   })
   .catch(err => {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   });
 }

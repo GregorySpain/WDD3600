@@ -15,7 +15,6 @@ router.get('/products', isAuth, adminController.getProducts);
 
 // /admin/add-product => POST
 router.post('/add-product',
-    isAuth,
     [
         body('title')
             .trim()
@@ -28,15 +27,15 @@ router.post('/add-product',
             .trim()
             .isFloat(),
         body('description')
-            .trim()
             .isLength({min: 5})
+            .trim()
     ],
+    isAuth,
     adminController.postAddProduct);
 
 router.get('/edit-product/:productId', isAuth, adminController.getEditProduct);
 
 router.post('/edit-product',
-    isAuth,
     [
         body('title')
             .trim()
@@ -49,9 +48,10 @@ router.post('/edit-product',
             .trim()
             .isFloat(),
         body('description')
-            .trim()
             .isLength({min: 5, max: 400})
+            .trim()
     ],
+    isAuth,
     adminController.postEditProduct);
 
 router.post('/delete-product', isAuth, adminController.postDeleteProduct);

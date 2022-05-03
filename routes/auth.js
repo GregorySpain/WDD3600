@@ -28,10 +28,10 @@ router.post('/login',
 
 router.post('/signup',
     [    
-        check('email')
+        body('email')
             .isEmail()
             .withMessage('Please enter a valid email.')
-            .custom((req, res, next) => {
+            .custom((value, { req }) => {
                 return User.findOne({ email: value })
                 .then(userDoc => {
                     if (userDoc) {

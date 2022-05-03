@@ -1,5 +1,5 @@
 const path = require('path'); // import the path module
-const get404 = require('./controllers/error') // import the error controller
+const errorController = require('./controllers/error') // import the error controller
 const User = require('./models/user');
 
 const express = require('express'); // import express
@@ -39,6 +39,12 @@ app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false, 
 app.use(crsfProtection);
 app.use(flash());
 
+app.use((req, res, next) => {
+    res.locals.isAuthenticated = req.session.isLoggedIn;
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
+
 // create a user and attach it to the request as req.user
 app.use((req, res, next) => {
     if (!req.session.user) {
@@ -46,26 +52,35 @@ app.use((req, res, next) => {
     }
     User.findById(req.session.user._id) // pass the user id to the findById function
     .then(user => { // then attach the data from the returned user to a new user object
+        if (!user) {
+            return next();
+        }
         req.user = user; // attach the user to the req
         next(); // call next so it is applied to all routes
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+        next(new Error(err));
+    });
 });
 
-app.use((req, res, next) => {
-    res.locals.isAuthenticated = req.session.isLoggedIn;
-    res.locals.csrfToken = req.csrfToken();
-    next();
-});
+
 app.use('/admin', adminRoutes); // for any requests to the admin folder use the admin route file
 
 app.use(shopRoutes); // for any requests to the shop folder, use the shop route.
 app.use(authRoutes);
 
+app.get('/500', errorController.get500);
 // if anything isn't handled above use the 404 page.
 // this calls the get404 function in the error controller.
-app.use(get404.get404);
+app.use(errorController.get404);
 
+app.use((error, req, res, next) => {
+    res.status(500).render('500', {
+        pageTitle: 'Error!',
+        path: '/500',
+        isAuthenticated: req.session.isLoggedIn
+      });
+})
 
 mongoose.connect(MONGODB_URI)
 .then(result => {
