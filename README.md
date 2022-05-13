@@ -17,6 +17,7 @@ There are several locations throughout where you will need to provide your own c
 # File Structure
 
 **controllers**
+
    admin.js
    auth.js
    error.js
@@ -30,7 +31,9 @@ There are several locations throughout where you will need to provide your own c
 
    is-auth.js
 
+
 **models**
+
    order.js
    product.js
    user.js
@@ -62,6 +65,7 @@ There are several locations throughout where you will need to provide your own c
    path.js
 
 **views**
+
    **admin**
 
       edit-product.ejs
@@ -87,7 +91,7 @@ There are several locations throughout where you will need to provide your own c
       orders.ejs
       product-detail.ejs
       product-list.ejs
-      
+
    404.ejs
    500.ejs
 
