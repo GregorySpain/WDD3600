@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport(
   sendgridTransport({
     auth: {
       api_key:
-        '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'
+        'Enter your SendGrid api key here' // Enter API key here
     }
   })
 );
@@ -95,6 +95,7 @@ exports.postLogin = (req, res, next) => {
         .then(doMatch => {
           if (doMatch) {
             req.session.isLoggedIn = true;
+            console.log(req.session.isLoggedIn)
             req.session.user = user;
             return req.session.save(err => {
               console.log(err);
@@ -159,7 +160,7 @@ exports.postSignup = (req, res, next) => {
           res.redirect('/login');
           return transporter.sendMail({
             to: email,
-            from: 'spaing3850@clarkstate.edu',
+            from: 'Enter From Email Here', // Enter your email here
             subject: 'Signup succeeded!',
             html: '<h1>You successfully signed up!</h1>'
           });
