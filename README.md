@@ -87,9 +87,13 @@ README.md
 # Database Structure
 
 **Schema: shop**
+
    **orders**
+
       _id: ObjectId
+
       products: [ { Product Object(s) } ]
+      
       user: { User Object }
 
    **products**
