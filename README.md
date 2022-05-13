@@ -91,13 +91,11 @@ README.md
    **orders**
 
       _id: ObjectId
-
       products: [ { Product Object(s) } ]
-
       user: { User Object }
 
    **products**
-   
+
       _id: ObjectId
       title: String
       price: Number
@@ -106,6 +104,7 @@ README.md
       userId: ObjectId
 
    **sessions**
+
       _id: ObjectId
       expires: { Date Object }
       session: {
@@ -117,6 +116,7 @@ README.md
       }
 
    **users**
+   
       email: String
       password: String
       resetToke: String
