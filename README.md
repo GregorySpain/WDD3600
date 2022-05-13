@@ -93,10 +93,11 @@ README.md
       _id: ObjectId
 
       products: [ { Product Object(s) } ]
-      
+
       user: { User Object }
 
    **products**
+   
       _id: ObjectId
       title: String
       price: Number
