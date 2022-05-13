@@ -23,9 +23,11 @@ There are several locations throughout where you will need to provide your own c
    shop.js
 
 **data**
+
    **invoices**
 
 **middleware**
+
    is-auth.js
 
 **models**
@@ -34,7 +36,9 @@ There are several locations throughout where you will need to provide your own c
    user.js
 
 **public**
+
    **css**
+
       auth.css
       cart.css
       forms.css
@@ -42,40 +46,48 @@ There are several locations throughout where you will need to provide your own c
       orders.css
       products.css
    **js**
+
       admin.js
       main.js
 
 **routes**
+
    admin.js
    auth.js
    shop.js
 
 **util**
+
    file.js
    path.js
 
 **views**
    **admin**
+
       edit-product.ejs
       products.ejs
    **auth**
+
       login.ejs
       new-password.ejs
       reset.ejs
       signup.ejs
    **includes**
+
       add-to-cart.ejs
       end.ejs
       head.ejs
       navigation.ejs
       pagination.ejs
    **shop**
+
       cart.ejs
       checkout.ejs
       index.ejs
       orders.ejs
       product-detail.ejs
       product-list.ejs
+      
    404.ejs
    500.ejs
 
@@ -116,7 +128,7 @@ README.md
       }
 
    **users**
-   
+
       email: String
       password: String
       resetToke: String
